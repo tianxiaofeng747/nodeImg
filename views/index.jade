@@ -1,0 +1,49 @@
+extends layout
+
+block content
+    h1= title
+    p 欢迎您
+    input(id="keywords")
+    button(id="tian") 开始
+    a(id="done" style="display:none" href="/img") 查看结果
+    div(id="msg") 请求结果
+        div(class="page")
+        div(class="img")
+        h3 下载内容详情
+        ul
+
+    script(src="/javascripts/socket.io-client/dist/socket.io.js")
+    script.
+        var socket = io();
+        socket.on('progress', function (data) {
+            if(data.type == 'detail'){
+
+            }else if(data.type == 'page'){
+                $('#msg .page').text(`总共有${data.msg}个页面`)
+            }else if(data.type == 'img'){
+                $('#msg .img').text(`总共有${data.msg}个图片`)
+            }
+            switch (data.type) {
+                case 'detail':
+                            let li = `<li>${data.msg}</li>`;
+                    $('#msg ul').append(li);
+                    break;
+                case 'page':
+                    $('#msg .page').text(`总共有${data.msg}个页面`)
+                    break;
+                case 'img':
+                    $('#msg .img').text(`总共有${data.total}个图片，已下载:${data.num}`)
+                    break;
+                case 'err':
+                    alert(data.msg);
+                    break;
+                case 'done':
+                    $('#done').show();
+                    break;
+
+            }
+        })
+        $('#tian').click(function (evt) {
+            var keywords = $('#keywords').val();
+            socket.emit('start', keywords);
+        })

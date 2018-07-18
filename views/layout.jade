@@ -3,6 +3,11 @@ html
     head
         title= title
         link(rel='stylesheet', href='/stylesheets/style.css')
+        link(rel='stylesheet', href='https://cdn.bootcss.com/bootstrap/4.1.1/css/bootstrap.min.css')
         script(src='/javascripts/jquery.min.js')
+        script (src="https://cdn.bootcss.com/bootstrap/4.1.1/js/bootstrap.min.js")
     body
+        nav.daohang
+            a(href='/')  首页
+            a(href='/imgList') 图片列表
         block content

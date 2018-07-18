@@ -1,16 +1,20 @@
 extends layout
 
 block content
-    h1= title
-    p 欢迎您
-    input(id="keywords")
-    button(id="start") 开始
-    a(id="done" style="display:none" href="/imgList") 查看结果
-    div(id="msg") 请求结果
-        div(class="page")
-        div(class="img")
-        h3 下载内容详情
-        ul
+    h3= title
+    form(class='form-inline')
+        .form-group
+            label(for='keywords',) 关键词：
+            input(id="keywords",class='form-control' placeholder="请输入关键词搜索")
+        button(id="start", class='btn btn-primary') 开始
+    div(id="msg")
+        div(class='panel panel-primary')
+            .panel-heading 请求结果
+            .panel-body
+                span.page
+                span.img
+        p 下载内容详情
+        ul.msg-detail
 
     script(src="/javascripts/socket.io-client/dist/socket.io.js")
     script.
@@ -31,10 +35,10 @@ block content
                     alert(data.msg);
                     break;
                 case 'done':
-                    $('#done').show();
+                    alert('执行完成');
+                    $('#keywords').val('');
                     $('#start')[0].disabled = false;
                     break;
-
             }
         })
         $('#start').click(function (evt) {
@@ -43,6 +47,7 @@ block content
                 alert('请输入关键词搜索')
             }else{
                 this.disabled = true;
+                $('ul.msg-detail').empty();
                 socket.emit('start', keywords);
             }
             

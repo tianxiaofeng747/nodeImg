@@ -2,7 +2,29 @@ body {
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
-
+ul,li {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
 a {
   color: #00B7FF;
 }
+.daohang{
+    margin-bottom: 20px;
+    background-color: #f4f4f4;
+    border-radius: 5px;
+    padding: 10px;
+    line-height: 30px;
+}
+.daohang a {
+    font-size: 16px;
+    display: inline-block;
+    padding: 0 15px;
+}
+.msg-detail{
+    border: solid 1px #ccc;
+    height: 350px;
+    overflow: auto;
+}
+/*.img-ul*/

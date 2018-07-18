@@ -1,0 +1,11 @@
+extends layout
+
+block content
+    ul.img-ul
+        if list.length
+            each item in list
+                li
+                    img(src= item)
+        else
+            li 暂无图片
+

@@ -1,6 +1,5 @@
 let request = require("request");
 let fs = require("fs");
-
 class Ut {
 	/**
 	 * 下载网络图片
@@ -8,17 +7,17 @@ class Ut {
 	 */
 	static downImg(opts = {}) {
 		let url = opts.url.split('/').pop();
-		let path = 'bin/download/';
-		if (!fs.existsSync(path)) {
-			fs.mkdirSync(path);
+		let dirPath = 'public/download/';
+		if (!fs.existsSync(dirPath)) {
+			fs.mkdirSync(dirPath);
 		}
 		return new Promise((resolve, reject) => {
 			request
 				.get(opts)
 				.on('response', (response) => {
-					console.log("img type:", response.headers['content-type'])
+					console.log("正在请求:", opts.url)
 				})
-				.pipe(fs.createWriteStream(path + url))
+				.pipe(fs.createWriteStream(dirPath + url))
 				.on("error", (e) => {
 					console.log("pipe error", e);
 					reject('下载错误' + e);

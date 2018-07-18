@@ -3,7 +3,6 @@
  */
 const cheerio = require('cheerio');
 const superagent = require('superagent');
-let request = require("request");
 const Throttle = require('superagent-throttle')
 const fs = require('fs');
 let Ut = require('./saveImg');
@@ -18,7 +17,10 @@ let throttle = new Throttle({
     }) // sent a request
     .on('received', (request) => {
         console.log('开始请求' + request.url);
-        //Page.conent(request , 'received');
+        Page.sendClient({
+            type: 'detail',
+            msg: '开始请求' + request.url
+        })
     })
     .on('drained', (request) => {
         "use strict";
@@ -30,23 +32,40 @@ let Page = {
     IO: null,
     pageNum: 0,
     imgList: [],
-    sendClient(data){
-        Page.IO.emit('progress', data);
+    /*
+    * 传输类型
+    * detail 请求详情
+    * page 子页面数量
+    * img 图片数量
+    * err 错误
+    * done 完成
+    */
+    sendClient(type){
+        Page.IO.emit('progress', type);
     },
     init(io, msg){
         const reptileUrl = "http://www.meisiguan.cc/?s=";
         this.IO = io;
-        //this.IO.on('disconnect')
         if (!msg) {
             this.sendClient({
                 type: 'err',
                 msg: '请输入关键词'
             })
         } else {
-            superagent.get(reptileUrl + msg).end((err, res) => {
+            superagent.get(reptileUrl + msg).timeout({
+                response: 5000,  // Wait 5 seconds for the server to start sending,
+                deadline: 60000, // but allow 1 minute for the file to finish loading.
+            }).use(throttle.plugin()).end((err, res) => {
                 // 抛错拦截
                 if (err) {
-                    return next(err);
+                    if(err.timeout){
+                        this.sendClient({
+                            type: 'err',
+                            msg: '请求超时'
+                        });
+                    }
+                    console.log(err)
+                    return;
                 }
                 let $ = cheerio.load(res.text);
                 let data = [];
@@ -63,7 +82,7 @@ let Page = {
                 this.sendClient({
                     type: 'page',
                     msg: this.pageNum
-                })
+                });
                 this.getSonPage(data);
             });
         }
@@ -113,12 +132,33 @@ let Page = {
                 if (finishNum == self.pageNum) {
                     self.download.call(self);
                 }
-            }
+            };
+        if(!list.length){
+            self.sendClient({
+                type: 'err',
+                msg: '搜索内容为空,请换个关键词重试'
+            });
+            self.sendClient({
+                type: 'done',
+                msg: ''
+            });
+            console.log('执行完成');
+            return;
+        }
         list.forEach((item, index) => {
             let url = item.href;
-            superagent.get(url).use(throttle.plugin()).end((err, res) => {
+            superagent.get(url).timeout({
+                response: 8000,
+                deadline: 60000,
+            }).use(throttle.plugin()).end((err, res) => {
                 if (err) {
-                    return next(err);
+                    if(err.timeout){
+                        this.sendClient({
+                            type: 'detail',
+                            msg: `请求${url}超时`
+                        });
+                    }
+                    return ;
                 }
                 let $ = cheerio.load(res.text),
                     p = $('.content_left p');

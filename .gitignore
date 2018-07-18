@@ -1,4 +1,4 @@
 node_modules/
-bin/download/
 .idea/
 public/download/
+*.bak

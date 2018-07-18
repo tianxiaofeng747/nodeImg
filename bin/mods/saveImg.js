@@ -8,14 +8,17 @@ class Ut {
 	 */
 	static downImg(opts = {}) {
 		let url = opts.url.split('/').pop();
-		let path = 'bin/download/rosi_' + url;
+		let path = 'bin/download/';
+		if (!fs.existsSync(path)) {
+			fs.mkdirSync(path);
+		}
 		return new Promise((resolve, reject) => {
 			request
 				.get(opts)
 				.on('response', (response) => {
 					console.log("img type:", response.headers['content-type'])
 				})
-				.pipe(fs.createWriteStream(path))
+				.pipe(fs.createWriteStream(path + url))
 				.on("error", (e) => {
 					console.log("pipe error", e);
 					reject('下载错误' + e);

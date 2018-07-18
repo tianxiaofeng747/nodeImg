@@ -4,8 +4,8 @@
  - 利用node socket.io 实现服务器和 浏览器通信，显示实时下载进度
  - 可浏览已下载的图片
 ### 主要技术
- - node  express 
- - node 插件 cheerio  request   superagent  superagent-throttle ...
+ - node  express express-cli
+ - node 插件 [cheerio](https://github.com/cheeriojs/cheerio)  request   [superagent](http://visionmedia.github.io/superagent)  superagent-throttle ...
  
 ### 待完善
  - 异常处理

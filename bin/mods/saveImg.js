@@ -1,11 +1,11 @@
 let request = require("request");
 let fs = require("fs");
-class Ut {
+let db = require('../../db/db.js');
+let Ut = {
 	/**
 	 * 下载网络图片
-	 * @param {object} opts
 	 */
-	static downImg(opts = {}) {
+    downImg(opts = {}) {
 		let url = opts.url.split('/').pop();
 		let dirPath = 'public/download/';
 		if (!fs.existsSync(dirPath)) {
@@ -19,14 +19,17 @@ class Ut {
 				})
 				.pipe(fs.createWriteStream(dirPath + url))
 				.on("error", (e) => {
-					console.log("pipe error", e);
-					reject('下载错误' + e);
+					console.log("下载错误", e);
+					reject({
+                        type: 'detail',
+                        msg: opts.url + '下载错误'
+                    });
 				})
 				.on("finish", () => {
-					//console.log("下载完成");
+                    db.update(opts);
 					resolve({
 						type: 'detail',
-						msg: '下载' + opts.url + '完成'
+						msg: opts.url + '下载完成'
 					});
 				})
 				.on("close", () => {
@@ -34,7 +37,23 @@ class Ut {
 				})
 
 		})
-	};
-}
+	},
+    saveUrl(list){
+        return new Promise(function (resolve,reject) {
+            db.insert(list).then((result) => {
+                if (result) {
+                    reject();
+                    console.log('保存失败');
+                } else {
+                    console.log('保存成功');
+                    resolve();
+                }
 
+            }).catch((err) => {
+                reject();
+            });
+        })
+
+    }
+};
 module.exports = Ut;

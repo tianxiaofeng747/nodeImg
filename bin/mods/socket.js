@@ -31,6 +31,7 @@ let throttle = new Throttle({
 let Page = {
     IO: null,
     pageNum: 0,
+    imgTotal: 0,
     imgList: [],
     /*
     * 传输类型
@@ -96,33 +97,43 @@ let Page = {
         let self = this,
             finishNum = 0,
             done = () => {
-                if (finishNum == self.imgList.length) {
-                    self.sendClient({
-                        type: 'detail',
-                        msg: '下载图片完成'
+                self.sendClient({
+                    type: 'detail',
+                    msg: '下载图片完成'
+                });
+                self.sendClient({
+                    type: 'done',
+                    msg: 'success'
+                });
+                self.clearData.call(self);
+            },
+            downloadSigle = ()=>{
+                if(this.imgList.length){
+                    let item = this.imgList.shift();
+                    Ut.downImg(item).then(result => {
+                        self.sendClient(result);
+                        finishNum++;
+                        self.sendClient({
+                            type: 'img',
+                            total: self.imgTotal,
+                            num: finishNum
+                        });
+                        downloadSigle();
+                    }).catch(err =>{
+                        self.sendClient(err);
+                        downloadSigle();
                     });
-                    self.sendClient({
-                        type: 'done',
-                        msg: 'success'
-                    });
-                    self.clearData.call(self);
+                }else{
+                    done();
                 }
-            };
+
+            }
         self.sendClient({
             type: 'detail',
             msg: '开始下载图片'
         });
-        this.imgList.forEach(item => {
-            Ut.downImg(item.obj).then(result => {
-                self.sendClient(result);
-                finishNum++;
-                self.sendClient({
-                    type: 'img',
-                    total: self.imgList.length,
-                    num: finishNum
-                });
-                done();
-            });
+        Ut.saveUrl(this.imgList).then(result =>{
+            downloadSigle();
         });
     },
     getSonPage(list){
@@ -166,16 +177,16 @@ let Page = {
                 $('.content_left p').each((i, elem) => {
                     let _this = $(elem),
                         obj = {
-                            url: _this.find('img').attr('src')
+                            url: _this.find('img').attr('src'),
+                            id: new Date().getTime() + ''
                         };
-                    obj.url && self.imgList.push({
-                        obj
-                    });
+                    obj.url && self.imgList.push(obj);
                 });
                 finishNum++;
+                self.imgTotal = this.imgList.length;
                 self.sendClient({
                     type: 'img',
-                    total: self.imgList.length,
+                    total: self.imgTotal,
                     num: 0
                 });
                 done();

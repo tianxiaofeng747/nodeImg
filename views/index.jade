@@ -12,9 +12,15 @@ block content
             .panel-heading 请求结果
             .panel-body
                 span.page
-                span.img
+                span.show-img-result
+                    | 总共有
+                    i.total 0
+                    | 个图片，已下载
+                    i.num 0
+
         p 下载内容详情
-        ul.msg-detail
+        div.msg-detail
+            ul.msg-detail-ul
 
     script(src="/javascripts/socket.io-client/dist/socket.io.js")
     script.
@@ -24,12 +30,14 @@ block content
                 case 'detail':
                             let li = `<li>${data.msg}</li>`;
                     $('#msg ul').append(li);
+                    $('#msg .msg-detail').scrollTop($('#msg ul').height());
                     break;
                 case 'page':
                     $('#msg .page').text(`总共有${data.msg}个页面`)
                     break;
                 case 'img':
-                    $('#msg .img').text(`总共有${data.total}个图片，已下载:${data.num}`)
+                    data.total && $('.show-img-result .total').text(data.total);
+                    data.num && $('.show-img-result .num').text(data.num);
                     break;
                 case 'err':
                     alert(data.msg);

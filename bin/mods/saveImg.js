@@ -19,10 +19,14 @@ let Ut = {
 				})
 				.pipe(fs.createWriteStream(dirPath + url))
 				.on("error", (e) => {
-					console.log("pipe error", e);
-					reject('下载错误' + e);
+					console.log("下载错误", e);
+					reject({
+                        type: 'detail',
+                        msg: opts.url + '下载错误'
+                    });
 				})
 				.on("finish", () => {
+                    db.update(opts);
 					resolve({
 						type: 'detail',
 						msg: opts.url + '下载完成'

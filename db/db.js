@@ -89,6 +89,24 @@ const result = {
             })
         });
     },
+    update(data){
+        return new Promise((resolve, reject) => {
+            this.getMongo().then((db) => {
+                let collection = db.collection(documents);
+                collection.findOneAndUpdate(data,{$set: {isDownload: true}},{
+                    returnOriginal: false,
+                    //sort: [[a,1]],
+                    upsert: true
+                },(err,docs) =>{
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+                    resolve();
+                });
+            })
+        });
+    },
     remove(data){
         return new Promise((resolve, reject) => {
             this.getMongo().then((db) => {

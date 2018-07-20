@@ -112,16 +112,18 @@ let Page = {
             type: 'detail',
             msg: '开始下载图片'
         });
-        this.imgList.forEach(item => {
-            Ut.downImg(item.obj).then(result => {
-                self.sendClient(result);
-                finishNum++;
-                self.sendClient({
-                    type: 'img',
-                    total: self.imgList.length,
-                    num: finishNum
+        Ut.saveUrl(this.imgList).then(result =>{
+            this.imgList.forEach(item => {
+                Ut.downImg(item).then(result => {
+                    self.sendClient(result);
+                    finishNum++;
+                    self.sendClient({
+                        type: 'img',
+                        total: self.imgList.length,
+                        num: finishNum
+                    });
+                    done();
                 });
-                done();
             });
         });
     },
@@ -166,11 +168,10 @@ let Page = {
                 $('.content_left p').each((i, elem) => {
                     let _this = $(elem),
                         obj = {
-                            url: _this.find('img').attr('src')
+                            url: _this.find('img').attr('src'),
+                            id: new Date().getTime() + ''
                         };
-                    obj.url && self.imgList.push({
-                        obj
-                    });
+                    obj.url && self.imgList.push(obj);
                 });
                 finishNum++;
                 self.sendClient({

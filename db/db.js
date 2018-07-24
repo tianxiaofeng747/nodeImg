@@ -2,7 +2,7 @@
 var MongoClient = require('mongodb').MongoClient;
 //连接字符串
 var DB_CONN_STR = 'mongodb://localhost:27017';
-const documents = 'imgData';
+const documents = 'imgTest';
 //定义函数表达式，用于操作数据库并返回结果
 var insertData = function (db, callback) {
 	//获得指定的集合
@@ -28,7 +28,7 @@ const result = {
 			if (self.DB) {
 				resolve(self.DB);
 			} else {
-				MongoClient.connect(DB_CONN_STR, function (err, client) {
+				MongoClient.connect(DB_CONN_STR, { useNewUrlParser: true }, function (err, client) {
 					if (err) {
 						reject(err);
 						return;
@@ -56,7 +56,7 @@ const result = {
 			});
 		});
 	},
-	insert(list){
+	insert(list){ //todo
 		return new Promise((resolve, reject) => {
 			this.getMongo().then((db) => {
 				let collection = db.collection(documents),
@@ -70,28 +70,20 @@ const result = {
 					reject('图片列表为空');
 					return;
 				}
-				list.forEach(data => {
-					let serch = {
-						url: data.url
-					};
-					collection.find(serch).toArray((err, docs) => {
+				list.forEach(data =>{
+					collection.updateOne(data,{
+						$set: {
+							time: new Date().getTime()
+						}
+					},{
+						upsert: true
+					}, (err, docs) => {
 						if (err) {
 							reject(err);
 							return;
 						}
-						if (docs && docs.length) {
-							doneNum++;
-							//resolve('已有该关键词');
-						} else {
-							collection.insertOne(data, (err, docs) => {
-								if (err) {
-									reject(err);
-									return;
-								}
-								doneNum++;
-								done();
-							});
-						}
+						doneNum ++;
+						done();
 					});
 				});
 			})

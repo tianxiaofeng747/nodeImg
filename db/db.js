@@ -22,18 +22,21 @@ var insertData = function (db, callback) {
 
 const result = {
     DB: null,
+    client: null,
     getMongo(){
         return new Promise((resolve, reject) => {
             let self = this;
             if (self.DB) {
                 resolve(self.DB);
             } else {
-                MongoClient.connect(DB_CONN_STR, function (err, client) {
+                MongoClient.connect(DB_CONN_STR, { useNewUrlParser: true }, function (err, client) {
                     if (err) {
                         reject(err);
                         return;
                     }
+                    self.client = client;
                     self.DB = client.db('test1');
+                    console.log('连接数据库成功');
                     resolve(self.DB);
                 });
             }
@@ -56,34 +59,30 @@ const result = {
         });
     },
     insert(list){
+        let self = this;
         return new Promise((resolve, reject) => {
             this.getMongo().then((db) => {
                 let collection = db.collection(documents),
-                    doneNum = 0;
-                let done = () =>{
-                    if(doneNum == list.length){
-                        resolve();
-                    }
-                };
-                list.length && list.forEach(data =>{
-                    collection.find(data).toArray((err,docs) =>{
+                    doneNum = 0,
+                    done = () =>{
+                        if(doneNum == list.length){
+                            resolve();
+                        }
+                    };
+                list.forEach(data =>{
+                    collection.updateOne(data,{
+                        $set: {
+                            time: new Date().getTime()
+                        }
+                    },{
+                        upsert: true
+                    }, (err, docs) => {
                         if (err) {
                             reject(err);
                             return;
                         }
-                        if(docs && docs.length){
-                            doneNum ++;
-                            //resolve('已有该关键词');
-                        }else{
-                            collection.insertOne(data, (err, docs) => {
-                                if (err) {
-                                    reject(err);
-                                    return;
-                                }
-                                doneNum ++;
-                                done();
-                            });
-                        }
+                        doneNum ++;
+                        done();
                     });
                 });
             })

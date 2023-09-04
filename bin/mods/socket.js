@@ -45,7 +45,8 @@ let Page = {
         Page.IO.emit('progress', type);
     },
     init(io, msg){
-        const reptileUrl = "http://www.meisiguan.cc/?s=";
+        let self = this;
+        const reptileUrl = "https://datachart.500.com/ssq/?expect=50";
         this.IO = io;
         if (!msg) {
             this.sendClient({
@@ -53,7 +54,7 @@ let Page = {
                 msg: '请输入关键词'
             })
         } else {
-            superagent.get(reptileUrl + msg).timeout({
+            superagent.get(reptileUrl).timeout({
                 response: 5000,  // Wait 5 seconds for the server to start sending,
                 deadline: 60000, // but allow 1 minute for the file to finish loading.
             }).use(throttle.plugin()).end((err, res) => {
@@ -69,25 +70,86 @@ let Page = {
                     return;
                 }
                 let $ = cheerio.load(res.text);
+                // this.sendClient({
+                //     type: 'data',
+                //     msg: $('#chartsTable tbody tr').length
+                // })
                 let data = [];
                 // 下面就是和jQuery一样获取元素，遍历，组装我们需要数据，添加到数组里面
-                $('#index_ajax_list li').each(function (i, elem) {
+                $('#tdata tr').each((i, elem) => {
                     let _this = $(elem);
-                    data.push({
-                        img: _this.find('img').attr('src'),
-                        title: _this.find('img').attr('alt'),
-                        href: _this.find('a').attr('href')
-                    });
+                    let tdText = _this.find('td').eq(0).text().trim();
+                    if(tdText && /^[0-9]*$/g.test(tdText)){
+                        let obj = {}
+                        obj.date = tdText;
+                        obj.redNumber = []; 
+                        _this.find('.chartBall01').each((i, item) => {
+                            obj.redNumber.push(Number($(item).text()))
+                        });
+                        obj.blurNumber = Number(_this.find('.chartBall02').text());
+                        data.push(obj);
+                    }
                 });
-                this.pageNum = data.length;
+                //开始计算冷热球
+                // 超过10次没出现，算冷球， 最近20次出现 次数大于5 ，算热球
+                let coldNums = [],
+                    fireNums = [];
+                data = data.reverse();
+                for(let i = 1; i< 34; i++){
+                    let tenArr = data.slice(0, 10);
+                    let hasBold = tenArr.find(item => item.redNumber.includes(i));
+                    if(!hasBold){
+                        coldNums.push(i);
+                    } else{
+                        fireNums.push(i)
+                    }
+                }
                 this.sendClient({
-                    type: 'page',
-                    msg: this.pageNum
-                });
-                this.getSonPage(data);
+                    type: 'data',
+                    msg: JSON.stringify(data)
+                })
+                this.sendClient({
+                    type: 'detail',
+                    msg: `上一期的红号为：${data[0].redNumber.join(',')}`
+                })
+                this.sendClient({
+                    type: 'detail',
+                    msg: `十期冷号为：${coldNums.join(',')}`
+                })
+                //号码池子
+                let pollNums = fireNums.filter(item => !data[0].redNumber.includes(item));
+                this.sendClient({
+                    type: 'detail',
+                    msg: `过滤掉上期+冷号后的组合为：${pollNums.join(',')}`
+                })
+                //简单的开始随机吧。
+
+                //随机生成
+                let grenerateNum = (arr, res = []) => {
+                    var random = Math.floor(Math.random() * arr.length + 1);
+                    let num = arr[random];
+                    if(res.length >= 6){
+                        return;
+                    }
+                    if(!res.includes(num)){
+                        res.push(num);
+                        grenerateNum(arr, res);
+                    } else{
+                        grenerateNum(arr, res);
+                    }
+                };
+                let luckyArr = [];
+                grenerateNum(pollNums, luckyArr);
+
+                this.sendClient({
+                    type: 'detail',
+                    msg: `幸运号为：${luckyArr.join(',')}`
+                })
+                
             });
         }
     },
+    
     clearData(){
         this.pageNum = 0;
         this.imgList = [];

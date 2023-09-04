@@ -32,8 +32,8 @@ block content
                     $('#msg ul').append(li);
                     $('#msg .msg-detail').scrollTop($('#msg ul').height());
                     break;
-                case 'page':
-                    $('#msg .page').text(`总共有${data.msg}个页面`)
+                case 'data':
+                    $('#msg .page').text(data.msg)
                     break;
                 case 'img':
                     data.total && $('.show-img-result .total').text(data.total);
@@ -49,14 +49,15 @@ block content
                     break;
             }
         })
-        $('#start').click(function (evt) {
-            var keywords = $('#keywords').val();
-            if(!keywords){
-                alert('请输入关键词搜索')
-            }else{
-                this.disabled = true;
-                $('ul.msg-detail').empty();
-                socket.emit('start', keywords);
-            }
+        socket.emit('start', keywords);
+        //- $('#start').click(function (evt) {
+        //-     var keywords = $('#keywords').val();
+        //-     if(!keywords){
+        //-         alert('请输入关键词搜索')
+        //-     }else{
+        //-         this.disabled = true;
+        //-         $('ul.msg-detail').empty();
+                
+        //-     }
             
-        })
+        //- })
